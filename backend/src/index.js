@@ -12,10 +12,12 @@ const app = express();
 const PORT = Number(process.env.PORT) || 4000;
 
 // CORS: 허용할 프론트엔드 주소 (쉼표로 여러 개)
+//  - 끝 슬래시는 무시(주소 입력 실수 방지), '*' 면 모든 출처 허용
 const origins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
   .split(',')
-  .map((s) => s.trim());
-app.use(cors({ origin: origins }));
+  .map((s) => s.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+app.use(cors({ origin: origins.includes('*') ? true : origins }));
 app.use(express.json());
 
 // 헬스체크 (배포 상태 확인용)
