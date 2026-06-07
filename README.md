@@ -3,6 +3,15 @@
 누군지 모르는 사람에게 편지를 띄우고, 누군지 모르는 사람의 편지를 줍는
 익명·랜덤·느린 소통 서비스. **데이터베이스 과제 프로젝트** (PostgreSQL).
 
+## 🌐 라이브 데모
+**https://bottle-message-ten.vercel.app**
+> Render 무료 백엔드는 15분 미사용 시 잠들어, 첫 요청이 ~50초 걸릴 수 있습니다(이후 정상).
+
+## 아키텍처 (3계층)
+```
+사용자 ─▶ Vercel (React/Vite, 프론트) ─▶ Render (Express/pg, 백엔드 API) ─▶ Neon (PostgreSQL)
+```
+
 ## 학습 목표 매핑
 - **릴레이션(Relation)**: `users` · `bottles` · `pickups` · `replies` 4개 테이블 + 외래키 관계
 - **쿼리(Query)**: JOIN/집계로 편지함·대화 스레드·통계 조회
@@ -19,9 +28,16 @@ databaseproject/
 │       ├── index.js     #   서버 진입점
 │       ├── db.js        #   pg 연결 풀
 │       └── routes/      #   users · bottles · replies
-├── frontend/            # React + Vite (UI)                       [예정]
+├── frontend/            # React + Vite (UI)
+│   └── src/
+│       ├── App.jsx      #   화면(입장/바다/편지함/대화)
+│       ├── api.js       #   백엔드 호출
+│       └── styles.css
+├── benchmark/           # 트랜잭션 벤치마크 (pgbench) — 격리수준·동시성 비교
 ├── scripts/             # 보조 스크립트 (DB 시드 재적용 등)
 ├── docker-compose.yml   # 로컬 개발용 PostgreSQL
+├── render.yaml          # Render 배포 설정
+├── DEPLOY.md            # 배포 가이드
 └── README.md
 ```
 > 프론트엔드 / 백엔드 / 데이터베이스를 디렉토리로 명확히 분리한 3계층 구조.
@@ -43,6 +59,19 @@ cd backend
 cp .env.example .env        # Windows: Copy-Item .env.example .env
 npm install
 npm run dev                 # http://localhost:4000 (자동 재시작)
+```
+
+### 3) 프론트엔드
+```bash
+cd frontend
+npm install
+npm run dev                 # http://localhost:5173 (개발 중 /api → 4000 프록시)
+```
+
+## 트랜잭션 벤치마크
+"병 줍기" 트랜잭션을 pgbench로 측정 (READ COMMITTED vs SERIALIZABLE, 동시성 10/50/100).
+```bash
+./benchmark/run_benchmark.ps1        # Windows (자세한 내용: benchmark/README.md)
 ```
 
 ## API 요약
