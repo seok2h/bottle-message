@@ -156,6 +156,7 @@ router.get('/inbox', async (req, res, next) => {
 // ---------------------------------------------------------------------
 router.get('/:id', async (req, res, next) => {
   try {
+    if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: '잘못된 병 번호입니다.' });
     const bottleRes = await query(
       `SELECT b.id, b.content, b.mood, b.status, b.created_at,
               b.author_id, u.nickname AS author_nickname

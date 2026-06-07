@@ -25,6 +25,7 @@ router.post('/', async (req, res, next) => {
 // GET /api/users/:id  → 사용자 정보 (재방문 시 신원 확인용)
 router.get('/:id', async (req, res, next) => {
   try {
+    if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: '잘못된 사용자 번호입니다.' });
     const result = await query(
       'SELECT id, nickname, created_at FROM users WHERE id = $1',
       [req.params.id]

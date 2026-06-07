@@ -1,0 +1,31 @@
+# 벤치마크 전용 PostgreSQL (앱 DB와 분리)
+#   - 포트 5433 (앱은 5432) → 동시에 떠 있어도 충돌 없음
+#   - max_connections=300 → pgbench -c 100 동시 접속 수용
+#
+#   docker compose -f benchmark/docker-compose.yml up -d
+#   (스키마는 첫 기동 시 자동 적용, 시드는 run_benchmark 스크립트가 적용)
+
+services:
+  benchdb:
+    image: postgres:18
+    container_name: bottle_benchdb
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bench
+      POSTGRES_PASSWORD: bench
+      POSTGRES_DB: bench
+      PGDATA: /var/lib/postgresql/data/pgdata
+    command: ["postgres", "-c", "max_connections=300"]
+    ports:
+      - "5433:5432"
+    volumes:
+      - benchdata:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bench -d bench"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  benchdata:

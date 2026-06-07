@@ -24,5 +24,10 @@ export const pool = new Pool(
       }
 );
 
+// 유휴 커넥션이 끊겨도(배포 환경에서 흔함) 프로세스가 죽지 않도록 에러를 흡수
+pool.on('error', (err) => {
+  console.error('예상치 못한 DB 풀 에러:', err.message);
+});
+
 // 쿼리 헬퍼: 라우트에서 await query('SELECT ...', [params]) 형태로 사용
 export const query = (text, params) => pool.query(text, params);

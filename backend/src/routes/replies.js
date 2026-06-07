@@ -10,6 +10,7 @@ const router = Router();
 router.post('/:id/replies', async (req, res, next) => {
   try {
     const bottleId = req.params.id;
+    if (!/^\d+$/.test(bottleId)) return res.status(400).json({ error: '잘못된 병 번호입니다.' });
     const { authorId, content } = req.body;
     if (!authorId) return res.status(400).json({ error: '로그인이 필요합니다.' });
     const text = (content || '').trim();
