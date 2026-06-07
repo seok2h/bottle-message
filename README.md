@@ -37,7 +37,6 @@ databaseproject/
 ├── scripts/             # 보조 스크립트 (DB 시드 재적용 등)
 ├── docker-compose.yml   # 로컬 개발용 PostgreSQL
 ├── render.yaml          # Render 배포 설정
-├── DEPLOY.md            # 배포 가이드
 └── README.md
 ```
 > 프론트엔드 / 백엔드 / 데이터베이스를 디렉토리로 명확히 분리한 3계층 구조.
