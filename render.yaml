@@ -1,0 +1,17 @@
+# Render 배포 설정 (백엔드)
+# Render 대시보드 → New → Blueprint → 이 레포 선택 시 자동 인식된다.
+# 무료 플랜(free): 15분 미사용 시 잠들고, 다음 요청 때 ~50초 후 깨어남(데모엔 충분).
+services:
+  - type: web
+    name: bottle-backend
+    runtime: node
+    plan: free
+    rootDir: backend          # 모노레포의 백엔드 디렉토리
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL      # Neon 연결 문자열 (대시보드에서 입력)
+        sync: false
+      - key: CORS_ORIGIN       # Vercel 프론트 주소 (대시보드에서 입력)
+        sync: false
