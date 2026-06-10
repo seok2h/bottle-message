@@ -56,22 +56,21 @@ COMMIT;
 
 | 격리수준 | 동시성 | TPS | 평균 지연(ms) | 실패(직렬화) |
 |---|---:|---:|---:|---:|
-| READ COMMITTED | 10 | 6,247 | 1.60 | 0 |
-| READ COMMITTED | 50 | 9,393 | 5.32 | 0 |
-| READ COMMITTED | 100 | 10,099 | 9.90 | 0 |
-| SERIALIZABLE | 10 | 5,223 | 1.91 | 17 |
-| SERIALIZABLE | 50 | 8,009 | 6.24 | 101 |
-| SERIALIZABLE | 100 | 7,065 | 14.14 | 234 |
+| READ COMMITTED | 10 | 8,280 | 1.21 | 0 |
+| READ COMMITTED | 50 | 14,595 | 3.43 | 0 |
+| READ COMMITTED | 100 | 13,642 | 7.33 | 0 |
+| SERIALIZABLE | 10 | 5,981 | 1.67 | 23 |
+| SERIALIZABLE | 50 | 11,328 | 4.41 | 118 |
+| SERIALIZABLE | 100 | 10,305 | 9.69 | 311 |
 
 ## 해석 (PPT 포인트)
-1. **READ COMMITTED + `SKIP LOCKED` 는 동시성에 잘 확장**된다.
-   클라이언트 10→100 으로 늘려도 TPS가 6.2k→10.1k 로 증가하고 **실패가 0**.
-   `SKIP LOCKED` 덕에 같은 병 경합 시 락 대기 없이 다른 병으로 넘어가기 때문.
+1. **READ COMMITTED + `SKIP LOCKED` 는 정합성·성능 모두 우수**하다.
+   모든 동시성에서 **실패가 0** — `SKIP LOCKED` 덕에 같은 병 경합 시 락 대기 없이
+   다른 병으로 넘어가기 때문. TPS는 10→50 에서 상승(8.3k→14.6k) 후 50→100 에서
+   소폭 하락(13.6k) → 약 50접속에서 처리 포화점에 도달.
 2. **SERIALIZABLE 은 더 안전하지만 비용이 크다.**
-   - 모든 동시성에서 TPS가 더 낮고, **직렬화 실패(serialization failure)** 가
-     동시성에 비례해 증가(17→101→234).
-   - 고동시성(100)에서는 충돌·재시도 비용으로 TPS가 오히려 꺾이고(10.1k→7.1k 대비)
-     지연이 크게 상승.
+   - 모든 동시성에서 TPS가 더 낮고 지연이 더 높다.
+   - **직렬화 실패(serialization failure)** 가 동시성에 비례해 급증(23→118→311).
 3. **결론**: 본 서비스의 "병 줍기"는 중복 줍기만 막으면 충분하므로
    기본 격리수준(READ COMMITTED) + `FOR UPDATE SKIP LOCKED` 조합이
    **정합성과 성능을 모두 만족**한다. SERIALIZABLE은 과도한 격리로 불필요한 비용 발생.

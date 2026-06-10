@@ -39,34 +39,34 @@ function RunCase($label, $file) {
   return $rows
 }
 
-Write-Host "[1/4] 벤치 DB 기동..." -ForegroundColor Cyan
+Write-Host "[1/4] Starting benchmark DB..." -ForegroundColor Cyan
 docker compose -f (Join-Path $dir "docker-compose.yml") up -d | Out-Null
 foreach ($i in 1..30) {
   docker exec $ct pg_isready -U bench -d bench 2>$null | Out-Null
   if ($?) { break }; Start-Sleep -Seconds 2
 }
 
-Write-Host "[2/4] 시드 확인/적용 (사용자 5만, 병 50만)..." -ForegroundColor Cyan
+Write-Host "[2/4] Seeding (50k users / 500k bottles)..." -ForegroundColor Cyan
 $cnt = (Psql "SELECT count(*) FROM bottles").Trim()
 if ($cnt -eq "0") {
   docker cp (Join-Path $dir "seed.sql") "${ct}:/tmp/seed.sql"
   docker exec $ct psql -U bench -d bench -v ON_ERROR_STOP=1 -f /tmp/seed.sql
 } else {
-  Write-Host "  이미 시드됨(병 $cnt 개) — 건너뜀"
+  Write-Host "  Already seeded ($cnt bottles) - skip"
 }
 
-Write-Host "[3/4] 워크로드 복사..." -ForegroundColor Cyan
+Write-Host "[3/4] Copying workloads..." -ForegroundColor Cyan
 docker cp (Join-Path $dir "workloads\pick.sql") "${ct}:/tmp/pick.sql"
 docker cp (Join-Path $dir "workloads\pick_serializable.sql") "${ct}:/tmp/pick_serializable.sql"
 
-Write-Host "[4/4] 벤치마크 실행 (각 케이스 ${Duration}s)" -ForegroundColor Cyan
+Write-Host "[4/4] Running benchmark (each case ${Duration}s)" -ForegroundColor Cyan
 $summary = @()
 Write-Host "=== READ COMMITTED ===" -ForegroundColor Yellow
 $summary += RunCase "READ_COMMITTED" "pick.sql"
 Write-Host "=== SERIALIZABLE ===" -ForegroundColor Yellow
 $summary += RunCase "SERIALIZABLE" "pick_serializable.sql"
 
-Write-Host "`n========== 결과 요약 ==========" -ForegroundColor Cyan
+Write-Host "`n========== SUMMARY ==========" -ForegroundColor Cyan
 $summary | Format-Table -AutoSize
 $summary | Export-Csv -Path (Join-Path $resultDir "summary.csv") -NoTypeInformation -Encoding UTF8
-Write-Host "원시 결과: benchmark/results/*.txt, 요약: benchmark/results/summary.csv"
+Write-Host "Raw: benchmark/results/*.txt   Summary: benchmark/results/summary.csv"
